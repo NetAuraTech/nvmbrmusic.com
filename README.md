@@ -31,8 +31,8 @@ AdonisJS Foundry is built on AdonisJS v7 and follows a domain-driven architectur
 - **Per-Client Rate Limiting** — Per-user request budget on the `/api/v1/*` surface, on top of the per-route throttles
 - **OpenAPI Documentation** — Runtime-generated OpenAPI 3 spec (`/api/v1/openapi.json`) scoped to the caller's permissions, with a self-hosted interactive reference at `/api/docs`
 - **Background Jobs** — Redis job queue (`@adonisjs/queue`) with a worker process and scheduled maintenance jobs (log pruning, backup retention)
-- **Incoming Webhooks (full flavor)** — HMAC-signed, replay-protected inbound deliveries with idempotent recording, queued processing, and a delivery log (admin UI + REST)
-- **Full-Text Search (full flavor)** — Optional Typesense-backed search across CMS page translations, with graceful fallback to the standard listing
+- **Incoming Webhooks** — HMAC-signed, replay-protected inbound deliveries with idempotent recording, queued processing, and a delivery log (admin UI + REST)
+- **Full-Text Search** — Optional Typesense-backed search across CMS page translations, with graceful fallback to the standard listing
 - **Monitoring** — Sentry on both sides: `@sentry/node` for the runtime, `@sentry/react` inlined into the browser bundle
 - **Domain-Driven Architecture** — Clean separation per domain: actions, domain entities, repositories, services, and thin controllers
 - **Structured Logging** — Categorized logs (AUTH, SECURITY, BUSINESS, API, DATABASE, PERFORMANCE) with Sentry integration, database persistence (`log_entries`), an in-admin log viewer, and a retention command
@@ -171,28 +171,6 @@ git merge foundry/main
 | --------- | ----------------------------------------------------- | -------------------------------- |
 | `origin`  | `git@github.com:your-username/my-project.git`         | Your project repository          |
 | `foundry` | `https://github.com/NetAuraTech/adonisjs-foundry.git` | Upstream boilerplate (read-only) |
-
-### Flavors & branches
-
-This repository ships as **three flavor branches** — the same codebase, pruned to different surfaces. This README (on `main`) is the **`full`** flavor, the complete tree.
-
-| Flavor      | Branch    | Pitch                                                                   |
-| ----------- | --------- | ----------------------------------------------------------------------- |
-| **full**    | `main`    | Inertia front + admin, CMS module and visual page builder (this README) |
-| **inertia** | `inertia` | Hand-written Inertia front + admin, no CMS / page builder               |
-| **api**     | `api`     | Headless REST backend (`/api/v1/*`), no frontend                        |
-
-**Choosing a flavor:** want the CMS / visual builder → `full`. Want auth + admin + hand-written pages, no CMS → `inertia`. Want a headless backend consumed by an external front (Next.js, mobile, …) → `api`.
-
-**How to get a flavor:** flavor branches are regenerated branches of `main` — check them out directly and note each carries its own README describing its conventions:
-
-```bash
-git checkout -b inertia origin/inertia   # or: git checkout -b api origin/api
-```
-
-**Upgrading:** flavors are not one-way doors — every flavor branch is derived from `main`, so anything it removes is recoverable. Upgrading is a documented manual `git` process, the inverse of each flavor's prune manifest: see `docs/flavors/README.md` and the [`api` → `full`](docs/flavors/api/upgrade-to-full.md) / [`inertia` → `full`](docs/flavors/inertia/upgrade-to-full.md) guides.
-
-**How it works:** the `inertia` and `api` branches are CI-regenerated artifacts produced from `main` by the declarative prune manifests in `tooling/prune/flavors/` (see [ADR-010](docs/adr/010-flavor-prune-pipeline.md)). They are never edited by hand.
 
 ### Available Scripts
 
@@ -368,7 +346,7 @@ The `worker` service runs `node ace queue:work -q default,auth,maintenance,webho
 password-reset mail (sent asynchronously after the forgot-password response),
 the scheduled maintenance tasks (Log Entry pruning and backup retention
 enforcement, registered at boot by `start/scheduler.ts`), and the inbound
-webhook deliveries (full flavor). With
+webhook deliveries. With
 `QUEUE_DRIVER=redis` the app enqueues the job and the worker delivers it; if
 no worker is running, jobs wait in Redis.
 
@@ -429,7 +407,7 @@ Two guards are available in `config/auth.ts`, toggled by environment variable:
 
 The admin JSON surface under `/api/v1/admin/*` (users, roles, permissions, pages, templates, files, folders, builder, dashboard, logs, maintenance, theme) accepts **both** guards when `AUTH_GUARD_API=true`: a browser keeps using its session cookie while scripts authenticate with a Bearer token — permissions resolve identically either way. Inertia pages remain session-only, and the rest of `/api/v1/*` (auth, profile, account) remains token-only: the two guards never overlap by accident.
 
-For the `api` flavor (no session guard at all): set `AUTH_GUARD_WEB=false` and `AUTH_GUARD_API=true`.
+For a headless deployment (no session guard at all): set `AUTH_GUARD_WEB=false` and `AUTH_GUARD_API=true`.
 
 **OAuth and mobile clients**: the OAuth flow relies on the browser session (state/nonce + flash messages) and always redirects back to the web app after a provider callback. A mobile client completes OAuth inside a system browser (the web app creates its session as usual), then obtains an API token via `POST /api/v1/auth/login` — OAuth-only users set a password first through the existing "define password" flow. No token is ever placed in a redirect URL.
 
@@ -722,7 +700,7 @@ Foundry ships a built-in maintenance mode, gated by the `maintenance` feature fl
 - **Schedule** — programmatic on/off at a given time (`maintenance:schedule`)
 - **Probes stay up** — `/health` and `/health/ready` are registered outside the maintenance middleware so load balancers keep probing
 
-## Incoming Webhooks (full flavor)
+## Incoming Webhooks
 
 Foundry ships an inbound-webhook facility: a public receiver, signature verification, and a delivery log.
 
@@ -743,7 +721,7 @@ sender:  sig = HMAC_SHA256(secret, `${ts}.${rawBody}`)   (hex)
 
 Foundry follows a **domain-driven architecture** with a strict layering convention.
 
-The application lives in the `apps/web` workspace (`@foundry/web`); the repo root holds the workspaces manifest, the single lockfile, repo-wide lint/format configs, the prune pipeline, CI, Docker and docs. The shared React component library (atoms, molecules, organisms, design tokens) lives in the `packages/design-system` workspace (`@foundry/design-system`).
+The application lives in the `apps/web` workspace (`@foundry/web`); the repo root holds the workspaces manifest, the single lockfile, repo-wide lint/format configs, CI, Docker and docs. The shared React component library (atoms, molecules, organisms, design tokens) lives in the `packages/design-system` workspace (`@foundry/design-system`).
 
 ```
 adonisjs-foundry/
@@ -751,10 +729,8 @@ adonisjs-foundry/
 │   └── web/                # The complete AdonisJS application (layout below)
 ├── packages/
 │   └── design-system/      # Shared React design system (@foundry/design-system)
-├── docs/                   # Agent docs, ADRs, flavor matrix
-├── tooling/
-│   └── prune/              # Flavor prune pipeline (engine + declarative manifests)
-├── .github/workflows/      # CI: tests, codegen drift check, flavor regeneration
+├── docs/                   # Agent docs, ADRs
+├── .github/workflows/      # CI: tests, codegen drift check, release
 ├── docker-compose.yml      # Dev infrastructure (PostgreSQL, Redis, MailHog, Typesense)
 ├── docker-compose.prod.yml # Production stack (Nginx + app replicas)
 └── Dockerfile              # Multi-stage production image
@@ -912,7 +888,7 @@ The project uses Node.js subpath imports for clean module resolution (paths rela
 
 ## Routes
 
-Routes are self-registering per domain (`app/<domain>/routes.ts`), gated by the feature flags in `config/features.ts`. The tables below list the public URLs of the `full` flavor.
+Routes are self-registering per domain (`app/<domain>/routes.ts`), gated by the feature flags in `config/features.ts`. The tables below list the public URLs.
 
 ### Home & Public Pages
 
@@ -1065,7 +1041,7 @@ Registered outside the maintenance middleware so load balancers can probe during
 | ------ | ------------- | --------------------- | ----------- |
 | GET    | `/admin/logs` | LogsController.render | `logs.view` |
 
-### Admin Routes — Webhooks (full flavor)
+### Admin Routes — Webhooks
 
 | Method | Path                         | Handler                     | Permission      |
 | ------ | ---------------------------- | --------------------------- | --------------- |
@@ -1100,7 +1076,7 @@ The admin JSON surface is shared by the in-repo admin UI (session guard) and, wh
 | PUT    | `/api/v1/admin/maintenance`                                                         | update maintenance config          |
 | PUT    | `/api/v1/admin/maintenance/toggle`                                                  | toggle maintenance mode            |
 | POST   | `/api/v1/admin/preferences/theme`                                                   | persist theme preference           |
-| GET    | `/api/v1/admin/webhooks/deliveries`                                                 | webhook delivery log (full flavor) |
+| GET    | `/api/v1/admin/webhooks/deliveries`                                                 | webhook delivery log               |
 
 ### API Routes — token-only surface (`/api/v1/*`)
 

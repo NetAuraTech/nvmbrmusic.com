@@ -50,6 +50,7 @@ test.group('BackupPipeline', (group) => {
 		_mkdir: sinon.stub().resolves(),
 		_stat: sinon.stub().resolves({ size: 2048 }),
 		_unlink: sinon.stub().resolves(),
+		_readFile: sinon.stub().resolves(''),
 		_writeFile: sinon.stub().resolves(),
 		_createDatabaseDump: sinon.stub().resolves(),
 		_restoreDatabase: sinon.stub().resolves(),
@@ -155,6 +156,8 @@ test.group('BackupPipeline', (group) => {
 		const dumpOptions = overrides._createDatabaseDump.firstCall.args[0];
 		assert.equal(dumpOptions.outputPath, join(tempDir, 'backup-full-2024-01-01-020000.sql'));
 		assert.isUndefined(dumpOptions.tables);
+		// The configured schema filter (BACKUP_PG_SCHEMAS) is always forwarded to pg_dump
+		assert.deepEqual(dumpOptions.schemas, backupConfig.database.schemas);
 		assert.isTrue(overrides._snapshotHelper.compress.calledBefore(overrides._snapshotHelper.encrypt));
 		assert.deepEqual(JSON.parse(overrides._writeFile.firstCall.args[1]), {
 			tables: ['users', 'posts'],
@@ -427,6 +430,44 @@ test.group('BackupPipeline', (group) => {
 		assert.isTrue(overrides._snapshotHelper.decompress.calledWith(restoreDecryptedPath));
 		assert.isTrue(overrides._restoreDatabase.calledOnce);
 		assert.equal(overrides._restoreDatabase.firstCall.args[0].sqlPath, restoreSqlPath);
+		// The configured schema filter (BACKUP_PG_SCHEMAS) is always forwarded
+		// so the restore can pre-drop on a live database
+		assert.deepEqual(overrides._restoreDatabase.firstCall.args[0].schemas, backupConfig.database.schemas);
+		// Full artifacts re-create every table — no table restriction
+		assert.isUndefined(overrides._restoreDatabase.firstCall.args[0].tables);
+		assert.isFalse(overrides._readFile.called);
+	});
+
+	test('restore() fetches the manifest for differential artifacts and limits the pre-drop to their tables', async ({
+		assert,
+	}) => {
+		const logService = buildLogService();
+		const overrides = buildOverrides();
+		const differentialFilename = 'backup-differential-2024-01-08-040000.sql.gz.enc';
+		const localPath = join(tempDir, differentialFilename);
+		const decryptedPath = localPath.slice(0, -'.enc'.length);
+		const sqlPath = decryptedPath.slice(0, -'.gz'.length);
+		const manifestFilename = 'backup-differential-2024-01-08-040000.manifest.json';
+		const manifestPath = join(tempDir, manifestFilename);
+
+		overrides._snapshotHelper.decrypt.resolves(decryptedPath);
+		overrides._snapshotHelper.decompress.resolves(sqlPath);
+		overrides._readFile.resolves(JSON.stringify({ tables: ['users', 'posts'] }));
+
+		const { BackupPipeline } = await import('#backup/services/backup_pipeline');
+		const pipeline = new BackupPipeline(logService, overrides);
+
+		const result = await pipeline.restore(differentialFilename);
+
+		assert.isTrue(result.success);
+		assert.isTrue(overrides._uploader.download.calledWith(manifestFilename, manifestPath));
+		assert.isTrue(overrides._readFile.calledWith(manifestPath, 'utf8'));
+		const restoreOptions = overrides._restoreDatabase.firstCall.args[0];
+		assert.deepEqual(restoreOptions.tables, ['users', 'posts']);
+		assert.deepEqual(
+			overrides._unlink.getCalls().map((call) => call.args[0]),
+			[localPath, decryptedPath, sqlPath, manifestPath],
+		);
 	});
 
 	test('restore() returns a failure result when the backup file is not found', async ({ assert }) => {
@@ -506,6 +547,8 @@ test.group('BackupPipeline', (group) => {
 			{ key: 'backup/backup-differential-2024-01-02-030000.sql.gz.enc', isDirectory: false },
 			{ key: 'backup/some/dir', isDirectory: true },
 			{ key: 'backup/notes.txt', isDirectory: false },
+			{ key: 'backup/backup-full-2024-01-01-020000.manifest.json', isDirectory: false },
+			{ key: 'backup', isDirectory: false }, // folder-marker object (S3), key normalized by the disk
 		] as any);
 		overrides._uploader.getMetaData.callsFake(async (key: string) => {
 			if (key.includes('differential')) {
@@ -525,6 +568,13 @@ test.group('BackupPipeline', (group) => {
 		assert.equal(backups[0].size, 111);
 		assert.equal(backups[1].filename, 'backup-full-2024-01-01-020000.sql.gz.enc');
 		assert.equal(backups[1].type, 'full');
+
+		// Metadata is only fetched for valid artifacts — never for the folder
+		// marker or the manifest, whose lookups would fail (S3 folder markers)
+		// or corrupt the listing (manifests are not restorable artifacts).
+		assert.equal(overrides._uploader.getMetaData.callCount, 2);
+		assert.isFalse(overrides._uploader.getMetaData.firstCall.args[0].includes('manifest'));
+		assert.isFalse(overrides._uploader.getMetaData.firstCall.args[0] === 'backup');
 	});
 
 	test('list() returns an empty list and logs when the disk is unavailable', async ({ assert }) => {

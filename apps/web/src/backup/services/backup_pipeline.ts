@@ -1,5 +1,6 @@
 import {
 	mkdir as defaultMkdir,
+	readFile as defaultReadFile,
 	stat as defaultStat,
 	unlink as defaultUnlink,
 	writeFile as defaultWriteFile,
@@ -32,6 +33,7 @@ export interface BackupPipelineOverrides {
 	_mkdir?: typeof defaultMkdir;
 	_stat?: typeof defaultStat;
 	_unlink?: typeof defaultUnlink;
+	_readFile?: typeof defaultReadFile;
 	_writeFile?: typeof defaultWriteFile;
 	_createDatabaseDump?: (
 		options: DumpOptions,
@@ -82,6 +84,7 @@ export class BackupPipeline {
 	private readonly mkdirFn: typeof defaultMkdir;
 	private readonly statFn: typeof defaultStat;
 	private readonly unlinkFn: typeof defaultUnlink;
+	private readonly readFileFn: typeof defaultReadFile;
 	private readonly writeFileFn: typeof defaultWriteFile;
 	private readonly createDump: (
 		options: DumpOptions,
@@ -105,6 +108,7 @@ export class BackupPipeline {
 		this.mkdirFn = overrides?._mkdir ?? defaultMkdir;
 		this.statFn = overrides?._stat ?? defaultStat;
 		this.unlinkFn = overrides?._unlink ?? defaultUnlink;
+		this.readFileFn = overrides?._readFile ?? defaultReadFile;
 		this.writeFileFn = overrides?._writeFile ?? defaultWriteFile;
 		this.createDump = overrides?._createDatabaseDump ?? defaultCreateDatabaseDump;
 		this.restoreDatabaseFn = overrides?._restoreDatabase ?? restoreDatabaseWithPsql;
@@ -143,8 +147,11 @@ export class BackupPipeline {
 	/**
 	 * Restore a database from a stored backup artifact: verify the artifact
 	 * exists, download it, decrypt and decompress it, then replay the SQL
-	 * dump through `psql`. All intermediate files are cleaned up after the
-	 * restore, whether it succeeds or fails.
+	 * dump through `psql`. When `backupConfig.database.schemas` is set, the
+	 * target schemas are reset first (same transaction) so a restore works
+	 * onto a live database as well as an empty one; differential artifacts
+	 * reset only the tables listed in their manifest. All intermediate files
+	 * are cleaned up after the restore, whether it succeeds or fails.
 	 *
 	 * @param filename - The backup artifact filename (relative to the storage
 	 *   prefix).
@@ -178,6 +185,21 @@ export class BackupPipeline {
 			const sqlPath = await this.snapshotHelper.decompress(decryptedPath);
 			filesToClean.push(sqlPath);
 
+			// Differential artifacts only re-create their listed tables, so the
+			// pre-drop must be limited to them: fetch the manifest to get the
+			// list. Full artifacts re-create every table, no manifest needed.
+			let tables: string[] | undefined;
+			if (BackupMetadata.parseFilename(filename)?.type === 'differential') {
+				const manifestFilename = BackupMetadata.manifestFilename(filename);
+				const manifestPath = join(backupConfig.tempDir, manifestFilename);
+				filesToClean.push(manifestPath);
+				await this.storageUploader.download(manifestFilename, manifestPath);
+				const manifest = JSON.parse(await this.readFileFn(manifestPath, 'utf8')) as {
+					tables?: string[];
+				};
+				tables = manifest.tables;
+			}
+
 			await this.restoreDatabaseFn({
 				host: env.get('PG_HOST')!,
 				port: Number(env.get('PG_PORT') || 5432),
@@ -185,6 +207,8 @@ export class BackupPipeline {
 				database: env.get('PG_DB_NAME')!,
 				password: env.get('PG_PASSWORD').release(),
 				sqlPath,
+				schemas: backupConfig.database.schemas,
+				tables,
 			});
 
 			this.logService.info({
@@ -216,13 +240,19 @@ export class BackupPipeline {
 	 */
 	async list(): Promise<BackupMetadata[]> {
 		try {
+			const prefix = `${backupConfig.storage.prefix}/`;
 			const objects = await this.storageUploader.listBackups();
 			const backups: BackupMetadata[] = [];
 
 			for (const object of objects) {
-				if (object.isDirectory) continue;
+				if (object.isDirectory || !object.key.startsWith(prefix)) continue;
 
-				const filename = object.key.replace(backupConfig.storage.prefix + '/', '');
+				const filename = object.key.slice(prefix.length);
+				// Skip non-artifacts (folder markers, manifests, stray files)
+				// before fetching metadata — object metadata lookups fail on
+				// folder-marker objects returned by S3-compatible disks.
+				if (!BackupMetadata.parseFilename(filename)) continue;
+
 				const meta = await this.storageUploader.getMetaData(object.key);
 				const backup = BackupMetadata.fromStorageObject(filename, meta, object.key);
 				if (!backup) continue;
@@ -342,6 +372,10 @@ export class BackupPipeline {
 	 *
 	 * @param outputPath - Local path to write the SQL dump to.
 	 * @param tables - Optional tables to limit the dump to (differential).
+	 *
+	 * The schema filter comes from `backupConfig.database.schemas`
+	 * (`BACKUP_PG_SCHEMAS`) so dumps stay limited to the application schemas
+	 * on platform-hosted databases (e.g. Supabase).
 	 */
 	private async dump(outputPath: string, tables?: string[]): Promise<void> {
 		this.track(outputPath);
@@ -353,6 +387,7 @@ export class BackupPipeline {
 			password: env.get('PG_PASSWORD').release(),
 			outputPath,
 			tables,
+			schemas: backupConfig.database.schemas,
 		});
 	}
 

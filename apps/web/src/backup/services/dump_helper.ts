@@ -10,6 +10,11 @@ export interface DumpOptions {
 	outputPath: string;
 	tables?: string[];
 	/**
+	 * Schemas to limit the dump to (one `--schema` flag each). Omit to dump
+	 * every schema (standard pg_dump behavior).
+	 */
+	schemas?: string[];
+	/**
 	 * Sanitize the dump file in place once pg_dump succeeds.
 	 * Defaults to true.
 	 */
@@ -58,19 +63,122 @@ export function sanitizeDumpForApostrophes(input: string): string {
 }
 
 /**
- * Reads a dump file, applies {@link sanitizeDumpForApostrophes} and writes it
- * back in place.
+ * Rewrite a plain-format pg_dump so its `CREATE FUNCTION` statements become
+ * `CREATE OR REPLACE FUNCTION`. A plain dump never emits `OR REPLACE`, so
+ * replaying it onto a database where the function already exists fails —
+ * including functions that are not application code (e.g. Supabase installs
+ * `public.rls_auto_enable`, which a `CREATE FUNCTION` without `OR REPLACE`
+ * refuses to overwrite).
+ *
+ * Lines starting with `CREATE FUNCTION` are rewritten; every other line is
+ * returned untouched. Lines inside a dollar-quoted function body (`$$` ...
+ * `$$;`) are never touched, so function bodies that happen to contain such
+ * a line are preserved verbatim.
+ *
+ * @param input - Raw dump content.
+ * @returns The dump content with replaceable function definitions.
+ *
+ * @example
+ * const safe = rewriteFunctionsOrReplace(rawDump)
+ */
+export function rewriteFunctionsOrReplace(input: string): string {
+	let inFunctionBody = false;
+
+	return input
+		.split('\n')
+		.map((line) => {
+			if (inFunctionBody) {
+				if (line === '$$;') inFunctionBody = false;
+				return line;
+			}
+
+			if (line === '$$') {
+				inFunctionBody = true;
+				return line;
+			}
+
+			return line.startsWith('CREATE FUNCTION')
+				? `CREATE OR REPLACE FUNCTION${line.slice('CREATE FUNCTION'.length)}`
+				: line;
+		})
+		.join('\n');
+}
+
+/**
+ * Rewrite a plain-format pg_dump so its `CREATE SCHEMA` statements become
+ * `CREATE SCHEMA IF NOT EXISTS`. A plain dump always emits `CREATE SCHEMA`
+ * for every dumped schema — including `public`, which exists in every
+ * database — so replaying the dump onto a live database fails before the
+ * first table is created.
+ *
+ * Lines starting with `CREATE SCHEMA ` that do not already carry
+ * `IF NOT EXISTS` are rewritten; every other line is returned untouched.
+ * Lines inside a dollar-quoted function body (`$$` ... `$$;`) are never
+ * touched, so function bodies that happen to contain such a line are
+ * preserved verbatim.
+ *
+ * @param input - Raw dump content.
+ * @returns The dump content with idempotent schema definitions.
+ *
+ * @example
+ * const safe = rewriteSchemasIfNotExist(rawDump)
+ */
+export function rewriteSchemasIfNotExist(input: string): string {
+	let inFunctionBody = false;
+
+	return input
+		.split('\n')
+		.map((line) => {
+			if (inFunctionBody) {
+				if (line === '$$;') inFunctionBody = false;
+				return line;
+			}
+
+			if (line === '$$') {
+				inFunctionBody = true;
+				return line;
+			}
+
+			if (!line.startsWith('CREATE SCHEMA ') || line.includes('IF NOT EXISTS')) {
+				return line;
+			}
+
+			return `CREATE SCHEMA IF NOT EXISTS ${line.slice('CREATE SCHEMA '.length)}`;
+		})
+		.join('\n');
+}
+
+/**
+ * Reads a dump file, applies {@link sanitizeDumpForApostrophes},
+ * {@link rewriteFunctionsOrReplace} and {@link rewriteSchemasIfNotExist}
+ * and writes it back in place.
  *
  * @param path - Path of the dump file to sanitize.
  * @throws {Error} When the file cannot be read or written.
  */
 async function sanitizeDumpFile(path: string): Promise<void> {
 	const contents = await readFile(path, 'utf8');
-	await writeFile(path, sanitizeDumpForApostrophes(contents), 'utf8');
+	await writeFile(
+		path,
+		rewriteSchemasIfNotExist(rewriteFunctionsOrReplace(sanitizeDumpForApostrophes(contents))),
+		'utf8',
+	);
 }
 
 /**
  * Execute a pg_dump process for the given options.
+ *
+ * The dump is a pure `CREATE` + data script (no `DROP` statements): the
+ * restore owns the reset and drops the objects the dump re-creates before
+ * replaying it (see `restoreDatabaseWithPsql`), which keeps the dump
+ * portable to any fresh database as well as replayable onto a live one.
+ *
+ * Without a `schemas` filter, pg_dump captures every schema of the database.
+ * On platform-hosted databases (e.g. Supabase, which owns the `auth`,
+ * `storage` and `realtime` schemas) this both leaks platform state into the
+ * backup and breaks restores — the `CREATE SCHEMA` statements collide with
+ * the schemas that already exist on the target. Pass `schemas` to restrict
+ * the dump to the application schemas.
  *
  * Once pg_dump exits successfully, the dump file is sanitized in place (see
  * {@link sanitizeDumpForApostrophes}) unless `options.sanitizeApostrophes` is
@@ -94,6 +202,7 @@ export function createDatabaseDump(
 	_sanitize: (path: string) => Promise<void> = sanitizeDumpFile,
 ): Promise<void> {
 	const tables = options.tables ?? [];
+	const schemas = options.schemas ?? [];
 
 	return new Promise((resolve, reject) => {
 		const args = [
@@ -112,6 +221,10 @@ export function createDatabaseDump(
 			'-f',
 			options.outputPath,
 		];
+
+		for (const schema of schemas) {
+			args.push('--schema', schema);
+		}
 
 		for (const table of tables) {
 			args.push('-t', table);

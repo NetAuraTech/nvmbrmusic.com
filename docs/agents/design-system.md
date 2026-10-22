@@ -2,8 +2,6 @@
 
 The shared React design system. Presentation **tokens** and (eventually) reusable **components** live in the `@foundry/design-system` workspace at `packages/design-system/`; the app consumes it as a workspace dependency. This is a **source-only** package — it ships no build output, and every consumer's bundler compiles it from source.
 
-> **Flavor note:** the design-system is a frontend concern. It is kept by the `full` and `inertia` flavors (both ship a React front) and pruned wholesale by the `api` flavor (headless, no frontend). The `api` flavor ships no `packages/` directory at all.
-
 ## The `@foundry/design-system` package
 
 - **Source-only, no build.** Consumers add `@foundry/design-system` to their `dependencies` and import it directly; the bundler resolves the linked package to its TypeScript source. There is no `main`/`dist` — the `exports` map is the public API.
@@ -22,7 +20,7 @@ Font loading is declared as CSS `@import`s (in both the package's canonical CSS 
 
 ## Boundary
 
-The package is a **consumer, never a depender**, of the app. It must not import app modules — not through a `#*` alias (the package has none) and not through a relative escape to `apps/` or `tooling/`. This is enforced two ways:
+The package is a **consumer, never a depender**, of the app. It must not import app modules — not through a `#*` alias (the package has none) and not through a relative escape to `apps/`. This is enforced two ways:
 
 1. **Resolution gate** — the package's `tsconfig`/bundler cannot resolve the app's aliases, so any such import fails typecheck.
 2. **Lint gate** — a repo-wide, path-scoped `no-restricted-imports` override fails fast on any package→app import (see `oxlint.config.ts`).
@@ -38,8 +36,6 @@ Storybook is a **package devDependency** and runs **locally only**: `npm run sto
 The app's React components live in `inertia/components/`, organized as Atomic Design (atoms → molecules → organisms). No `templates`/`pages` folders — page-level layout lives in `inertia/pages/`.
 
 The move of components into the package is in progress: all generic atoms, the `auth_intro`, `banner`, `field`, `image_picker` and `pagination` molecules, and the `header`, `footer` and `admin` organisms (`admin_header`, `admin_main`, `admin_sidebar`) already live in the package. The app keeps what is workflow- or app-coupled: the `theme_toggle` and `auth_providers` molecules, the `file_image` / `file_upload_input` atoms, and the `settings`, `file manager` and CMS builder organisms.
-
-> **Flavor note:** the `inertia/components/cms/` subtree is `full`-flavor only (the `inertia` flavor prunes it too; the `api` flavor prunes the whole `inertia/` tree).
 
 Package molecules are **100% props/children**: app data reaches them through injected query functions and render props (e.g. `ImagePicker` receives a `loadFile` query and a `renderFileManager` surface; `Pagination` receives resolved label strings and a `buildHref` callback; `Field` receives a `sanitizeValue` function, a `renderImage` extension point, and — through the validation seam — a `validation` bundle typed by the structural `FieldValidation` interface plus the Inertia `errors` record). The package owns no app data, no API endpoint and no i18n catalog.
 

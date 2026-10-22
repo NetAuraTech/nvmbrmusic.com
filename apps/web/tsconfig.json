@@ -10,8 +10,7 @@
 		"node_modules/**",
 		"build/**",
 		"bower_components/**",
-		"jspm_packages/**",
-		"tests/unit/prune/**"
+		"jspm_packages/**"
 	],
 	"references": [
 		{

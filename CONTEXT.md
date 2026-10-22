@@ -6,30 +6,25 @@ A production-ready boilerplate and headless CMS: authentication, an admin panel 
 
 ### Contexts & Modules
 
-**Flavor**:
-A surface variant of the codebase — `full` (the `main` branch: Inertia front + admin + CMS module), `inertia` (front + admin, no CMS) and `api` (headless REST, no front). The `inertia` and `api` branches are CI-regenerated artifacts of `main`, produced by the declarative prune manifests in `tooling/prune/flavors/`; they are never edited by hand. Flavor variation is confined to the allowlisted config/composition/docs files — any code only one flavor has belongs in a prunable module (the CMS module, the webhook module).
-_Avoid_: edition, tier, branch (the branch is the vehicle, the flavor is the concept)
-
 **Admin**:
-The authenticated back-office context: `/admin/*` URLs, controllers under `{domain}/admin/`, `admin.*` route names, the `admin.json` i18n namespace. Exists in every flavor, independently of the CMS module.
+The authenticated back-office context: `/admin/*` URLs, controllers under `{domain}/admin/`, `admin.*` route names, the `admin.json` i18n namespace. Exists independently of the CMS module.
 _Avoid_: CMS (the old name of this context before ADR-0001; `cms` now names only the CMS module), dashboard (a screen inside Admin, not the context)
 
 **CMS module**:
-The prunable vertical slice of content management — Page, Template, page builder, Contact — living in the `src/cms/` business module (actions, services, repositories, models, exceptions) and the `app/cms/` transport module (controllers, routes, nav, validators, transformers, REST resources), plus the co-located per-domain units (`database/{migrations,seeders,factories}/cms/`, `resources/lang/{en,fr}/cms/`, `inertia/{pages,components}/cms/`, `tests/{unit,integration,functional}/cms/`, …). Absent from the `inertia` and `api` flavors. Rule of thumb: if it dies when the CMS dies, it lives in the CMS module.
-_Avoid_: back-office, admin panel (those are the Admin context, which survives every flavor)
+The vertical slice of content management — Page, Template, page builder, Contact — living in the `src/cms/` business module (actions, services, repositories, models, exceptions) and the `app/cms/` transport module (controllers, routes, nav, validators, transformers, REST resources), plus the co-located per-domain units (`database/{migrations,seeders,factories}/cms/`, `resources/lang/{en,fr}/cms/`, `inertia/{pages,components}/cms/`, `tests/{unit,integration,functional}/cms/`, …). Rule of thumb: if it dies when the CMS dies, it lives in the CMS module.
+_Avoid_: back-office, admin panel (those are the Admin context)
 
 **Front**:
-The audience-facing shell context: controllers under `{domain}/front/`, Inertia pages under `{domain}/front/`. Covers public content rendering (Pages, Contact) and authenticated self-service screens (account, profile, preferences) — it is about _who the screen is for_, not about authentication. Exists in the front flavors (full, inertia); the headless `api` flavor prunes the front context entirely.
+The audience-facing shell context: controllers under `{domain}/front/`, Inertia pages under `{domain}/front/`. Covers public content rendering (Pages, Contact) and authenticated self-service screens (account, profile, preferences) — it is about _who the screen is for_, not about authentication.
 _Avoid_: Public (that is the exposure axis, below), website
 
 **Public**:
-The exposure axis: unauthenticated route modules and feature flags (the CMS public front registered by `#transport/cms/routes`, the future `publicApi` flag) — anything reachable without a session. Orthogonal to Front: a Public route serves the Front audience, but a Front screen may still require a session. (Front flavors — the headless `api` flavor has no public site routes.)
+The exposure axis: unauthenticated route modules and feature flags (the CMS public front registered by `#transport/cms/routes`, the future `publicApi` flag) — anything reachable without a session. Orthogonal to Front: a Public route serves the Front audience, but a Front screen may still require a session.
 _Avoid_: front, anonymous, guest
 
 ### Content
 
-> **(full flavor)** The terms below belong to the CMS module — Page, PageTranslation, PageRevision, Block and
-> Template are pruned from the `inertia` and `api` flavor branches.
+> The terms below belong to the CMS module.
 
 **Page**:
 A publishable unit in the CMS, identified by its `defaultLocale` and an optional homepage flag. A Page owns one or more PageTranslations and has no content of its own — all renderable content lives on its translations.
@@ -53,8 +48,7 @@ _Avoid_: Layout, preset, snippet
 
 ### Collaboration (Page Builder)
 
-> **(full flavor)** The terms below belong to the CMS page builder — Builder Session, Lock and
-> Draft are pruned from the `inertia` and `api` flavor branches.
+> The terms below belong to the CMS page builder.
 
 **Builder Session**:
 A user's active editing presence on a specific PageTranslation, tracked in the cache (Redis) with a TTL, not in the database. Ends on disconnect or timeout.
@@ -112,9 +106,9 @@ _Avoid_: MFA (the system implements exactly one second-factor type), OTP (a code
 A one-time credential, generated in a batch when 2FA is enabled and shown exactly once, usable in place of a TOTP code at login. Entering one consumes it permanently.
 _Avoid_: Backup token, reset token (those are selector/validator Tokens)
 
-### Webhooks (full flavor)
+### Webhooks
 
-> The terms below belong to the inbound-webhook module — pruned from the `inertia` and `api` flavor branches.
+> The terms below belong to the inbound-webhook module.
 
 **Webhook Delivery**:
 A single inbound, HMAC-signed `POST /webhooks/:receiver`. Verified by `X-Signature` (hex HMAC-SHA256 of `${X-Timestamp}.${rawBody}`) against the shared secret, bounded by a replay window, and recorded idempotently in `webhook_deliveries` (deduplicated by `X-Delivery-Id` or a payload digest). A worker job then advances it `pending → processed/failed`. The `202` response acknowledges receipt, not processing.
@@ -183,4 +177,4 @@ _Avoid_: Expiration, TTL (TTL belongs to cache entries)
 **Domain**: No — it's a Token (selector/validator pattern), single-purpose and short-lived. Session/auth tokens are handled by `@adonisjs/auth`, not this Token model.
 
 **Dev**: Is the user-management screen part of the CMS?
-**Domain**: No. It belongs to the Admin context — the authenticated back-office that exists in every flavor. The CMS module is only the prunable content vertical (Page, Template, builder, Contact); user management survives when the CMS module is pruned.
+**Domain**: No. It belongs to the Admin context — the authenticated back-office. The CMS module is only the content vertical (Page, Template, builder, Contact); user management lives outside of it.

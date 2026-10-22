@@ -81,10 +81,6 @@ export default defineConfig({
 								regex: '^apps(?:/|$)',
 								message: 'The design-system package must not import from the app tree.',
 							},
-							{
-								regex: '^(?:\\.\\./)+tooling(?:/|$)',
-								message: 'The design-system package must not import from the repo tooling.',
-							},
 						],
 					},
 				],

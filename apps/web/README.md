@@ -1,6 +1,6 @@
 # `@foundry/web`
 
-The AdonisJS application workspace. This file documents the workspace itself — its layout, conventions, and how to run it — in a way that stays true on every flavor branch. For the project overview, the feature list, and the routes of your flavor, see the [root README](../../README.md); for architectural conventions, see [`docs/agents/`](../../docs/agents/) at the repo root.
+The AdonisJS application workspace. This file documents the workspace itself — its layout, conventions, and how to run it. For the project overview, the feature list, and the routes, see the [root README](../../README.md); for architectural conventions, see [`docs/agents/`](../../docs/agents/) at the repo root.
 
 ## Running the app
 

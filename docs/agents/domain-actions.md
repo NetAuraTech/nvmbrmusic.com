@@ -113,7 +113,7 @@ src/
   backup/actions/        # backup
 ```
 
-> **(full flavor)** CMS actions (page, template) live under `src/cms/actions/{page,template}/`.
+> CMS actions (page, template) live under `src/cms/actions/{page,template}/`.
 
 ## Documentation
 

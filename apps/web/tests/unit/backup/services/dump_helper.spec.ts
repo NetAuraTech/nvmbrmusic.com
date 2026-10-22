@@ -56,6 +56,71 @@ test.group('DumpHelper', (group) => {
 		assert.include(args, '/tmp/dump.sql');
 		assert.include(args, '--no-owner');
 		assert.include(args, '--no-privileges');
+		// Dumps are pure CREATE + data: the restore owns the reset (pre-drop)
+		// and replays the dump in the same transaction.
+		assert.notInclude(args, '--clean');
+		assert.notInclude(args, '--if-exists');
+	});
+
+	test('createDatabaseDump appends --schema flags for each schema', async ({ assert }) => {
+		const { createDatabaseDump } = await import('#backup/services/dump_helper');
+
+		const mockProcess = {
+			on: sinon.stub().callsFake((event: string, cb: (...args: any[]) => void) => {
+				if (event === 'close') cb(0);
+			}),
+			stderr: { on: sinon.stub() },
+		};
+		const spawnStub = sinon.stub().returns(mockProcess);
+		const sanitizeStub = sinon.stub().resolves();
+
+		await createDatabaseDump(
+			{
+				host: 'localhost',
+				port: 5432,
+				user: 'postgres',
+				database: 'mydb',
+				password: 'secret',
+				outputPath: '/tmp/dump.sql',
+				schemas: ['public', 'app'],
+			},
+			spawnStub,
+			sanitizeStub,
+		);
+
+		const [, args] = spawnStub.firstCall.args;
+		const sIdx1 = args.indexOf('--schema');
+		assert.equal(args[sIdx1 + 1], 'public');
+		const sIdx2 = args.lastIndexOf('--schema');
+		assert.equal(args[sIdx2 + 1], 'app');
+	});
+
+	test('createDatabaseDump omits --schema flags when no schemas are given', async ({ assert }) => {
+		const { createDatabaseDump } = await import('#backup/services/dump_helper');
+
+		const mockProcess = {
+			on: sinon.stub().callsFake((event: string, cb: (...args: any[]) => void) => {
+				if (event === 'close') cb(0);
+			}),
+			stderr: { on: sinon.stub() },
+		};
+		const spawnStub = sinon.stub().returns(mockProcess);
+		const sanitizeStub = sinon.stub().resolves();
+
+		await createDatabaseDump(
+			{
+				host: 'localhost',
+				port: 5432,
+				user: 'postgres',
+				database: 'mydb',
+				password: 'secret',
+				outputPath: '/tmp/dump.sql',
+			},
+			spawnStub,
+			sanitizeStub,
+		);
+
+		assert.notInclude(spawnStub.firstCall.args[1], '--schema');
 	});
 
 	test('createDatabaseDump appends -t flags for each table', async ({ assert }) => {
@@ -333,5 +398,58 @@ test.group('DumpHelper', (group) => {
 		assert.equal(lines[7], '\\restrict some-token');
 		assert.equal(lines[8], '\\.');
 		assert.equal(lines[9], 'SET standard_conforming_strings = on;');
+	});
+
+	test('rewriteFunctionsOrReplace rewrites top-level CREATE FUNCTION lines', async ({ assert }) => {
+		const { rewriteFunctionsOrReplace } = await import('#backup/services/dump_helper');
+
+		const input = [
+			'CREATE FUNCTION public.rls_auto_enable() RETURNS event_trigger',
+			'LANGUAGE plpgsql',
+			'$$',
+			'BEGIN',
+			'CREATE FUNCTION never_rewritten() RETURNS void AS $$ SELECT 1; $$;',
+			'END;',
+			'$$;',
+			'CREATE FUNCTION public.other(x integer) RETURNS integer',
+		].join('\n');
+
+		const output = rewriteFunctionsOrReplace(input);
+
+		const lines = output.split('\n');
+		assert.equal(lines[0], 'CREATE OR REPLACE FUNCTION public.rls_auto_enable() RETURNS event_trigger');
+		// Lines inside a dollar-quoted body are preserved verbatim
+		assert.equal(lines[4], 'CREATE FUNCTION never_rewritten() RETURNS void AS $$ SELECT 1; $$;');
+		assert.equal(lines[7], 'CREATE OR REPLACE FUNCTION public.other(x integer) RETURNS integer');
+	});
+
+	test('rewriteSchemasIfNotExist rewrites top-level CREATE SCHEMA lines', async ({ assert }) => {
+		const { rewriteSchemasIfNotExist } = await import('#backup/services/dump_helper');
+
+		const input = [
+			'CREATE SCHEMA public;',
+			'CREATE SCHEMA "My Schema";',
+			'CREATE SCHEMA public; -- trailing comment',
+			'CREATE SCHEMA IF NOT EXISTS other;',
+			'LANGUAGE plpgsql',
+			'$$',
+			'BEGIN',
+			'CREATE SCHEMA public; -- inside a body, untouched',
+			'END;',
+			'$$;',
+			'CREATE SCHEMA audit;',
+		].join('\n');
+
+		const output = rewriteSchemasIfNotExist(input);
+
+		const lines = output.split('\n');
+		assert.equal(lines[0], 'CREATE SCHEMA IF NOT EXISTS public;');
+		assert.equal(lines[1], 'CREATE SCHEMA IF NOT EXISTS "My Schema";');
+		assert.equal(lines[2], 'CREATE SCHEMA IF NOT EXISTS public; -- trailing comment');
+		// Lines that already carry IF NOT EXISTS are preserved
+		assert.equal(lines[3], 'CREATE SCHEMA IF NOT EXISTS other;');
+		// Lines inside a dollar-quoted body are preserved verbatim
+		assert.equal(lines[7], 'CREATE SCHEMA public; -- inside a body, untouched');
+		assert.equal(lines[10], 'CREATE SCHEMA IF NOT EXISTS audit;');
 	});
 });

@@ -8,9 +8,6 @@
     "packages/*"
   ],
   "type": "module",
-  "imports": {
-    "#prune/*": "./tooling/prune/*.js"
-  },
   "scripts": {
     "start": "npm run start --workspace @foundry/web",
     "dev": "npm run dev --workspace @foundry/web",
@@ -25,7 +22,7 @@
     "format": "oxfmt --write .",
     "format:ci": "oxfmt --check .",
     "format:check": "oxfmt --check .",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/web/inertia/tsconfig.json && npm run typecheck --workspace @foundry/design-system",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/web/inertia/tsconfig.json && npm run typecheck --workspace @foundry/design-system",
     "postinstall": "patch-package"
   },
   "devDependencies": {

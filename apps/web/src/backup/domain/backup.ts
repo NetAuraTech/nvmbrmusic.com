@@ -23,7 +23,8 @@ export class BackupMetadata extends ValueObject<{
 	 * `YYYY-MM-DD`/`HHmmss` timestamp, followed by the optional
 	 * `.sql[.gz][.enc]` extension stack.
 	 */
-	private static readonly FILENAME_PATTERN = /^backup-(full|differential)-(\d{4}-\d{2}-\d{2})-(\d{6})/;
+	private static readonly FILENAME_PATTERN =
+		/^backup-(full|differential)-(\d{4}-\d{2}-\d{2})-(\d{6})\.sql(\.gz)?(\.enc)?$/;
 
 	private constructor(
 		readonly filename: string,
