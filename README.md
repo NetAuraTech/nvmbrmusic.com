@@ -510,7 +510,7 @@ The CMS includes a complete file management system with folder organization, mul
 | `s3` | Amazon S3 or S3-compatible    | `DRIVE_DISK=s3`          |
 | `r2` | Cloudflare R2                 | `DRIVE_DISK=r2`          |
 
-All CMS files are stored under the `cms/` prefix to avoid colliding with the backup system.
+All CMS files are stored under the `files/` directory on the configured Drive disk, alongside the backup system's `backup/` folder.
 
 ### Image Optimization
 
@@ -636,7 +636,7 @@ If no full backup exists when a differential is requested, a full backup is perf
 
 ### Storage
 
-Backups use the same Drive disks as the CMS file system (`fs`, `s3`, `r2`), configured via `BACKUP_STORAGE_DISK` (defaults to `fs`). All backup files are stored under the `backup/` prefix to avoid colliding with the `cms/` prefix used by file uploads.
+Backups use the same Drive disks as the CMS file system (`fs`, `s3`, `r2`), configured via `BACKUP_STORAGE_DISK` (defaults to `fs`). All backup files are stored under the `backup/` prefix to avoid colliding with the `files/` directory used by file uploads.
 
 | Disk | Description                          | Config                            |
 | ---- | ------------------------------------ | --------------------------------- |
@@ -1051,32 +1051,32 @@ Registered outside the maintenance middleware so load balancers can probe during
 
 The admin JSON surface is shared by the in-repo admin UI (session guard) and, when `AUTH_GUARD_API=true`, by external API clients (Bearer token). Standard REST CRUD applies to the `users`, `roles`, `pages`, `templates`, `files` and `folders` resources (`GET` index / `POST` store / `GET|PUT|DELETE` by `:id`), plus these extra endpoints:
 
-| Method | Path                                                                                | Notes                              |
-| ------ | ----------------------------------------------------------------------------------- | ---------------------------------- |
-| PUT    | `/api/v1/admin/pages/:id/publish`                                                   | publish a page                     |
-| PUT    | `/api/v1/admin/pages/:id/unpublish`                                                 | unpublish a page                   |
-| PUT    | `/api/v1/admin/pages/:id/homepage`                                                  | designate the homepage             |
-| POST   | `/api/v1/admin/pages/:id/translations`                                              | create a translation               |
-| GET    | `/api/v1/admin/pages/:id/translations/:translationId/revisions`                     | revision history                   |
-| POST   | `/api/v1/admin/pages/:id/translations/:translationId/revisions/:revisionId/restore` | restore                            |
-| PUT    | `/api/v1/admin/pages/:id/translations/:translationId/revisions/:revisionId/pin`     | pin/unpin                          |
-| GET    | `/api/v1/admin/pages/preview/token`                                                 | live-preview token                 |
-| POST   | `/api/v1/admin/templates/from-page`                                                 | create template from page          |
-| GET    | `/api/v1/admin/templates/preview/token`                                             | template preview token             |
-| PUT    | `/api/v1/admin/files/:id/move`                                                      | move a file                        |
-| PUT    | `/api/v1/admin/files/:id/alt`                                                       | upsert an alt text                 |
-| DELETE | `/api/v1/admin/files/:id/alt`                                                       | delete an alt text                 |
-| GET    | `/api/v1/admin/folders/:id/children`                                                | nested folder children             |
-| POST   | `/api/v1/admin/builder/operations`                                                  | page-builder operations            |
-| GET    | `/api/v1/admin/builder/presence/:translationId`                                     | builder presence                   |
-| POST   | `/api/v1/admin/builder/draft/:translationId`                                        | save a builder draft               |
-| GET    | `/api/v1/admin/dashboard`                                                           | dashboard figures                  |
-| GET    | `/api/v1/admin/logs`                                                                | log viewer data                    |
-| GET    | `/api/v1/admin/maintenance`                                                         | maintenance config                 |
-| PUT    | `/api/v1/admin/maintenance`                                                         | update maintenance config          |
-| PUT    | `/api/v1/admin/maintenance/toggle`                                                  | toggle maintenance mode            |
-| POST   | `/api/v1/admin/preferences/theme`                                                   | persist theme preference           |
-| GET    | `/api/v1/admin/webhooks/deliveries`                                                 | webhook delivery log               |
+| Method | Path                                                                                | Notes                     |
+| ------ | ----------------------------------------------------------------------------------- | ------------------------- |
+| PUT    | `/api/v1/admin/pages/:id/publish`                                                   | publish a page            |
+| PUT    | `/api/v1/admin/pages/:id/unpublish`                                                 | unpublish a page          |
+| PUT    | `/api/v1/admin/pages/:id/homepage`                                                  | designate the homepage    |
+| POST   | `/api/v1/admin/pages/:id/translations`                                              | create a translation      |
+| GET    | `/api/v1/admin/pages/:id/translations/:translationId/revisions`                     | revision history          |
+| POST   | `/api/v1/admin/pages/:id/translations/:translationId/revisions/:revisionId/restore` | restore                   |
+| PUT    | `/api/v1/admin/pages/:id/translations/:translationId/revisions/:revisionId/pin`     | pin/unpin                 |
+| GET    | `/api/v1/admin/pages/preview/token`                                                 | live-preview token        |
+| POST   | `/api/v1/admin/templates/from-page`                                                 | create template from page |
+| GET    | `/api/v1/admin/templates/preview/token`                                             | template preview token    |
+| PUT    | `/api/v1/admin/files/:id/move`                                                      | move a file               |
+| PUT    | `/api/v1/admin/files/:id/alt`                                                       | upsert an alt text        |
+| DELETE | `/api/v1/admin/files/:id/alt`                                                       | delete an alt text        |
+| GET    | `/api/v1/admin/folders/:id/children`                                                | nested folder children    |
+| POST   | `/api/v1/admin/builder/operations`                                                  | page-builder operations   |
+| GET    | `/api/v1/admin/builder/presence/:translationId`                                     | builder presence          |
+| POST   | `/api/v1/admin/builder/draft/:translationId`                                        | save a builder draft      |
+| GET    | `/api/v1/admin/dashboard`                                                           | dashboard figures         |
+| GET    | `/api/v1/admin/logs`                                                                | log viewer data           |
+| GET    | `/api/v1/admin/maintenance`                                                         | maintenance config        |
+| PUT    | `/api/v1/admin/maintenance`                                                         | update maintenance config |
+| PUT    | `/api/v1/admin/maintenance/toggle`                                                  | toggle maintenance mode   |
+| POST   | `/api/v1/admin/preferences/theme`                                                   | persist theme preference  |
+| GET    | `/api/v1/admin/webhooks/deliveries`                                                 | webhook delivery log      |
 
 ### API Routes — token-only surface (`/api/v1/*`)
 
@@ -1420,7 +1420,7 @@ Move email change logic from controller to AccountService
 
 - New models: `File`, `FileAlt`, `FileFolder`
 - Multi-disk storage via `@adonisjs/drive` (local FS, S3, Cloudflare R2)
-- `StorageService`: abstraction layer over Drive with `cms/` prefix, env-based disk resolution, silent-delete semantics
+- `StorageService`: abstraction layer over Drive with env-based disk resolution and silent-delete semantics
 - File upload with size validation (`MAX_UPLOAD_SIZE` env) and extension validation
 - Folder system with nested hierarchy and alphabetical ordering
 - Per-locale named alt text system (`file_alts` table, keyed by `file_id + locale + key`)

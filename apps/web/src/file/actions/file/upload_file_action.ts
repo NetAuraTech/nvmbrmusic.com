@@ -52,7 +52,7 @@ export class UploadFileAction {
 		const disk = this.storageService.disk();
 		const filename = `${randomUUID()}.${ext}`;
 		const tmpPath = path.join(process.cwd(), 'tmp', filename);
-		const storagePath = this.storageService.buildPath(`files/${filename}`);
+		const storagePath = `files/${filename}`;
 
 		await file.move(path.join(process.cwd(), 'tmp'), { name: filename });
 		const contents = await readFile(tmpPath);
