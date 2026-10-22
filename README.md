@@ -131,7 +131,7 @@ mkdir my-project && cd my-project
 git init
 ```
 
-#### 2. Add Foundry as an upstream remote
+#### 2. Add Foundry as a remote
 
 ```bash
 # Add the Foundry repo as a remote called "foundry"
