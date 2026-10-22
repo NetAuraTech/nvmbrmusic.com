@@ -65,7 +65,7 @@ _Avoid_: Autosave, working copy
 ### Files
 
 **File**:
-An uploaded asset (image, document, etc.) stored on a configured Drive disk under the `cms/` prefix, with metadata (size, mime type, dimensions for images).
+An uploaded asset (image, document, etc.) stored on a configured Drive disk under the `files/` directory (alongside the backup system's `backup/` folder), with metadata (size, mime type, dimensions for images).
 _Avoid_: Asset, upload, media
 
 **FileFolder**:

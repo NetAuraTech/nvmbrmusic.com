@@ -5,13 +5,7 @@
 		"jsx": "react",
 		"outDir": "./build"
 	},
-	"exclude": [
-		"inertia/**",
-		"node_modules/**",
-		"build/**",
-		"bower_components/**",
-		"jspm_packages/**"
-	],
+	"exclude": ["inertia/**", "node_modules/**", "build/**", "bower_components/**", "jspm_packages/**"],
 	"references": [
 		{
 			"path": "./tsconfig.inertia.json"

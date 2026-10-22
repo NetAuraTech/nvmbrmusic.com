@@ -28,14 +28,14 @@ test.group('PageResolverService', (group) => {
     file.mimeType = 'image/jpeg'
     file.extension = 'jpg'
     file.size = 1024
-    file.path = `cms/files/file-${id}.jpg`
+    file.path = `files/file-${id}.jpg`
     file.disk = 'fs'
     const resolvedAlts = alts.map((a) => Object.assign(new FileAlt(), a))
     file.$setRelated('alts', resolvedAlts)
 
     // Stub url() directly on the instance — the model method calls its own
     // internal storage which isn't available in unit tests.
-    file.url = sinon.stub().resolves(`https://cdn.example.com/cms/files/file-${id}.jpg`)
+    file.url = sinon.stub().resolves(`https://cdn.example.com/files/file-${id}.jpg`)
 
     return file
   }
@@ -120,7 +120,7 @@ test.group('PageResolverService', (group) => {
     const resolved = result.blocks[0].props as any
 
     assert.equal(resolved.image.id, 10)
-    assert.equal(resolved.image.url, 'https://cdn.example.com/cms/files/file-10.jpg')
+    assert.equal(resolved.image.url, 'https://cdn.example.com/files/file-10.jpg')
     assert.equal(resolved.image.alt, 'Hero image')
     assert.equal(resolved.image.mimeType, 'image/jpeg')
     assert.equal(resolved.image.extension, 'jpg')
