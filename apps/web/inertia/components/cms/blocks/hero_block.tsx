@@ -28,8 +28,11 @@ const SOCIAL_LINKS = [
 export default function HeroBlock({ block }: HeroBlockProps) {
 	const { logo, socials, className } = block.props;
 
+	// `bg-paper`: the live hero sits on the band-portrait panel (black
+	// background with the emblem); it is part of the hero's fixed design, so
+	// it is applied here rather than through the block's `className` prop.
 	return (
-		<section className={['py-10', className].filter(Boolean).join(' ')}>
+		<section className={['bg-paper', 'py-10', className].filter(Boolean).join(' ')}>
 			<div className="container">
 				<div className="mb-8 flex justify-center">
 					<h1 className="font-bold leading-normal text-neutral-800">

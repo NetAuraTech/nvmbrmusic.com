@@ -21,7 +21,7 @@
 
 @theme {
 	--font-bebas:
-		'BebasNeue', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+		'Bebas Neue', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
 		Arial, 'Noto Sans', sans-serif;
 	--font-cormorant: 'Cormorant Garamond', serif;
 	--font-playfair: 'Playfair Display', serif;
@@ -110,7 +110,7 @@
 
 	body {
 		@apply font-jost bg-surface;
-		/* November: the band portrait is a fixed page background, centred and
+		/* November: the band emblem is a fixed page background, centred and
 		   scaled to 50% width, peeking through the transparent sections. */
 		background-color: hsl(0 0% 100%);
 		background-image: url('https://files.nvmbrmusic.com/files/37e003ac-05b5-4101-b28b-1139f576de5b.png');
@@ -408,6 +408,16 @@
 	/* November container: `width: min(100% - 2rem, 82rem); margin-inline: auto;` */
 	width: min(100% - 2rem, 82rem);
 	margin-inline: auto;
+}
+
+/* November: the black crumpled-paper texture as a section background, as on
+   the live site (hero, quotes and footer sections). */
+@utility bg-paper {
+	background-color: #000;
+	background-image: url('https://files.nvmbrmusic.com/files/515e4df4-144d-4d2a-a484-465583eab432.jpg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
 }
 
 @utility grid-auto-fit-* {
