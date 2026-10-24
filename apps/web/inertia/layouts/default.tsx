@@ -61,6 +61,12 @@ const FOOTER_LINK = 'text-primary-500 no-underline transition-colors duration-30
 /** Shared classes for the November footer headings (light text on the band portrait). */
 const FOOTER_HEADING = 'my-6 text-primary-500 font-bold [line-height:normal]';
 
+/**
+ * Current year for the footer copyright line, computed once at module load
+ * so the render itself stays pure (the value only changes once a year).
+ */
+const FOOTER_YEAR = new Date().getFullYear();
+
 interface LayoutProps {
 	children: ReactElement<SharedProps>;
 }
@@ -308,7 +314,7 @@ export default function Layout(props: LayoutProps) {
 							</div>
 
 							<p className="text-center">
-								© 2025 All Rights Reserved to November | Created by{' '}
+								© {FOOTER_YEAR} All Rights Reserved to November | Created by{' '}
 								<a
 									href="https://www.netauratech.fr"
 									target="_blank"
