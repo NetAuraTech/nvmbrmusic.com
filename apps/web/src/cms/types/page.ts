@@ -20,7 +20,9 @@ export type BlockType =
 	| 'carousel'
 	| 'list'
 	| 'quote'
-	| 'iframe';
+	| 'iframe'
+	| 'hero'
+	| 'gallery';
 
 /**
  * Remote video providers supported by the `video` block embed pipeline.
@@ -297,6 +299,26 @@ export interface IframeProps {
 	className?: string;
 }
 
+/**
+ * Props of the `hero` block — a centered band logo with social media links.
+ * `logo` and each `socials` entry reference media-library files; both are
+ * resolved server-side before rendering.
+ */
+export interface HeroProps {
+	logo: FileRef | null;
+	socials: FileRef[];
+	className?: string;
+}
+
+/**
+ * Props of the `gallery` block — a full-bleed image gallery rendered with
+ * a client-side lightbox. `images` order defines the display order.
+ */
+export interface GalleryProps {
+	images: FileRef[];
+	className?: string;
+}
+
 export interface ButtonProps {
 	children: string;
 	linkType: 'page' | 'route' | 'external';
@@ -343,6 +365,8 @@ export interface BlockPropsMap {
 	list: ListProps;
 	quote: QuoteProps;
 	iframe: IframeProps;
+	hero: HeroProps;
+	gallery: GalleryProps;
 }
 
 /**
@@ -435,6 +459,25 @@ export interface ResolvedIframeProps {
 }
 
 /**
+ * Resolved props of the `hero` block. `logo` is `null` when the referenced
+ * file is missing; unresolvable `socials` entries are dropped.
+ */
+export interface ResolvedHeroProps {
+	logo: ResolvedFile | null;
+	socials: ResolvedFile[];
+	className?: string;
+}
+
+/**
+ * Resolved props of the `gallery` block. Unresolvable file references are
+ * dropped from `images`.
+ */
+export interface ResolvedGalleryProps {
+	images: ResolvedFile[];
+	className?: string;
+}
+
+/**
  * Maps each BlockType to its resolved props.
  * Types without FileRef are identical to their source counterparts.
  */
@@ -456,6 +499,8 @@ export interface ResolvedBlockPropsMap {
 	list: ListProps;
 	quote: QuoteProps;
 	iframe: ResolvedIframeProps;
+	hero: ResolvedHeroProps;
+	gallery: ResolvedGalleryProps;
 }
 
 /**

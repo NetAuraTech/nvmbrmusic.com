@@ -33,6 +33,8 @@ const BLOCK_TYPES = [
 	'list',
 	'quote',
 	'iframe',
+	'hero',
+	'gallery',
 ] as const;
 
 /**

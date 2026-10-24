@@ -60,4 +60,75 @@ const classes = [
 	'-mt-1',
 	'-mt-2',
 	'my-5',
+
+	// ── November homepage: classes rendered from DB-stored content ──
+	// The CMS `htmltext` blocks and per-block `className` props live in the
+	// database, so Tailwind's scanner never sees them; they are listed here
+	// explicitly so the generated CSS always contains them.
+	//
+	// Layout & spacing
+	'container',
+	'block',
+	'hidden',
+	'mb-6',
+	'mt-4',
+	'mt-8',
+	'mt-10',
+	'my-6',
+	'py-3',
+	'py-6',
+	'py-8',
+	'px-[1.7em]',
+	'py-[0.35em]',
+	// Flex & grid
+	'flex',
+	'inline-flex',
+	'items-center',
+	'justify-center',
+	'gap-2',
+	'gap-4',
+	'gap-6',
+	'grid-auto-fit-[250px]',
+	'grid-auto-fit-[320px]',
+	'grid-auto-fit-[230px]',
+	'min-[65em]:grid',
+	'min-[65em]:grid-cols-[1fr_150px]',
+	'min-[65em]:gap-40',
+	// Typography
+	'font-bebas',
+	'font-bold',
+	'font-normal',
+	'uppercase',
+	'leading-none',
+	'[line-height:normal]',
+	'text-center',
+	'text-right',
+	'text-2xl',
+	'text-4xl',
+	'text-[1.75rem]',
+	'text-[2rem]',
+	'min-[75em]:text-5xl',
+	'min-[75em]:text-[2.25rem]',
+	// Colors
+	'text-neutral-000',
+	'text-neutral-100',
+	'text-neutral-400',
+	'text-neutral-800',
+	'text-primary-500',
+	// Borders & backgrounds
+	'border-0',
+	'border-t-2',
+	'border-neutral-400',
+	'rounded-none',
+	'bg-neutral-900',
+	// Interactions
+	'cursor-pointer',
+	'no-underline',
+	'transition-colors',
+	'duration-[275ms]',
+	'hover:bg-primary-400',
+	// Banner image block `className` (stored in the DB)
+	'w-[1791px]',
+	'max-w-full',
+	'mx-auto',
 ];

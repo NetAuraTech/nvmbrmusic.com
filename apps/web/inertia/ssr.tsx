@@ -13,7 +13,7 @@ export default function render(page: any) {
 	return createInertiaApp({
 		page,
 		render: ReactDOMServer.renderToString,
-		title: (title) => (title ? `${title} - ${appName}` : appName),
+		title: (title) => (title ? (title.includes(appName) ? title : `${title} - ${appName}`) : appName),
 		resolve: (name) => {
 			return resolvePageComponent<ResolvedComponent>(
 				`./pages/${name}.tsx`,

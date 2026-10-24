@@ -1,3 +1,4 @@
+@import '@fontsource/bebas-neue/400.css';
 @import '@fontsource/cormorant-garamond/400.css';
 @import '@fontsource/cormorant-garamond/700.css';
 @import '@fontsource/cormorant-garamond/400-italic.css';
@@ -11,7 +12,7 @@
 @source "../pages";
 @source "../components";
 @source "../layouts";
-@source "./safelist";
+@source "./safelist.ts";
 @source "../../../../packages/design-system/src";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -19,47 +20,87 @@
 @custom-variant focus (&:is(:focus-visible));
 
 @theme {
+	--font-bebas:
+		'BebasNeue', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+		Arial, 'Noto Sans', sans-serif;
 	--font-cormorant: 'Cormorant Garamond', serif;
 	--font-playfair: 'Playfair Display', serif;
 	--font-jost: 'Jost Variable', 'Jost', sans-serif;
 
-	--color-primary-deep: oklch(0.3038 0.0392 162.91);
-	--color-primary: oklch(0.4049 0.0528 161.65);
-	--color-primary-soft: oklch(0.5373 0.0669 159.37);
-	--color-primary-light: oklch(0.7959 0.043 153.88);
+	/* November palette — mapped onto the foundry semantic tokens so the
+	   design-system components (and admin UI) share the live site colours. */
+	--color-primary-deep: hsl(178 72% 7.5%);
+	--color-primary: hsl(178 72% 43%);
+	--color-primary-soft: hsl(178 72% 60%);
+	--color-primary-light: hsl(178 72% 95%);
 
-	--color-secondary-deep: oklch(0.7294 0.0887 81.25);
-	--color-secondary: oklch(0.7294 0.0887 81.25);
-	--color-secondary-soft: oklch(0.7294 0.0887 81.25);
-	--color-secondary-light: oklch(0.8507 0.0623 82.99);
+	--color-secondary-deep: hsl(313 100% 30%);
+	--color-secondary: hsl(313 100% 44%);
+	--color-secondary-soft: hsl(313 100% 60%);
+	--color-secondary-light: hsl(313 100% 95%);
 
-	--color-tertiary: oklch(0.7543 0.0621 18.63);
-	--color-tertiary-light: oklch(0.9019 0.0267 17.66);
+	--color-tertiary: hsl(24 75% 50%);
+	--color-tertiary-light: hsl(24 75% 95%);
 
-	--color-ink: oklch(0.162 0.014 258.363);
-	--color-ink-muted: oklch(0.4 0.018 263);
-	--color-ink-subtle: oklch(0.6 0.012 263);
-	--color-ink-inverted: oklch(0.97 0.005 263);
-	--color-ink-inverted-muted: oklch(0.823 0.01 267.344);
-	--color-ink-inverted-subtle: oklch(0.65 0.01 263);
+	--color-ink: hsl(230 24% 18%);
+	--color-ink-muted: hsl(230 14% 44%);
+	--color-ink-subtle: hsl(230 13% 54%);
+	--color-ink-inverted: hsl(0 0% 100%);
+	--color-ink-inverted-muted: hsl(230 25% 92%);
+	--color-ink-inverted-subtle: hsl(230 19% 78%);
 
-	--color-canvas: oklch(0.974 0.0114 84.58);
-	--color-surface: oklch(0.9322 0.0226 87.15);
-	--color-sunken: oklch(0.94 0.007 263);
-	--color-overlay: oklch(0.995 0.002 263);
-	--color-raised: oklch(1 0 0);
+	--color-canvas: hsl(0 0% 100%);
+	--color-surface: hsl(0 0% 100%);
+	--color-sunken: hsl(230 25% 92%);
+	--color-overlay: hsl(0 0% 100%);
+	--color-raised: hsl(0 0% 100%);
 
-	--color-edge: oklch(0.82 0.012 263);
-	--color-edge-strong: oklch(0.65 0.018 263);
+	--color-edge: hsl(230 15% 65%);
+	--color-edge-strong: hsl(230 13% 54%);
 
-	--color-success: oklch(0.55 0.15 145);
-	--color-success-soft: oklch(0.92 0.04 145);
-	--color-warning: oklch(0.62 0.15 75);
-	--color-warning-soft: oklch(0.95 0.04 75);
-	--color-danger: oklch(0.55 0.18 25);
-	--color-danger-soft: oklch(0.93 0.04 25);
-	--color-info: oklch(0.55 0.12 240);
-	--color-info-soft: oklch(0.93 0.03 240);
+	--color-success: hsl(96 75% 40%);
+	--color-success-soft: hsl(96 75% 95%);
+	--color-warning: hsl(48 75% 50%);
+	--color-warning-soft: hsl(48 75% 95%);
+	--color-danger: hsl(0 75% 50%);
+	--color-danger-soft: hsl(0 75% 95%);
+	--color-info: hsl(174 75% 45%);
+	--color-info-soft: hsl(174 75% 95%);
+
+	/* November raw ramps (live-site values) — exposed as Tailwind utilities
+	   (bg-neutral-900, text-primary-500, …). The neutral-* entries override
+	   Tailwind's default neutral scale with the site's blue-grey ramp. */
+	--color-neutral-000: hsl(0 0% 100%);
+	--color-neutral-100: hsl(230 25% 92%);
+	--color-neutral-200: hsl(230 19% 78%);
+	--color-neutral-300: hsl(230 15% 65%);
+	--color-neutral-400: hsl(230 13% 54%);
+	--color-neutral-500: hsl(230 14% 44%);
+	--color-neutral-600: hsl(230 18% 34%);
+	--color-neutral-700: hsl(230 21% 24%);
+	--color-neutral-800: hsl(230 24% 18%);
+	--color-neutral-900: hsl(230 29% 11%);
+	--color-neutral-1000: hsl(230 34% 12%);
+
+	--color-accent-100: hsl(313 100% 95%);
+	--color-accent-200: hsl(313 100% 70%);
+	--color-accent-300: hsl(313 100% 60%);
+	--color-accent-400: hsl(313 100% 55%);
+	--color-accent-500: hsl(313 100% 44%);
+	--color-accent-600: hsl(313 100% 40%);
+	--color-accent-700: hsl(313 100% 30%);
+	--color-accent-800: hsl(313 100% 17.5%);
+	--color-accent-900: hsl(313 100% 7.5%);
+
+	--color-primary-100: hsl(178 72% 95%);
+	--color-primary-200: hsl(178 72% 70%);
+	--color-primary-300: hsl(178 72% 60%);
+	--color-primary-400: hsl(178 72% 55%);
+	--color-primary-500: hsl(178 72% 43%);
+	--color-primary-600: hsl(178 72% 40%);
+	--color-primary-700: hsl(178 72% 30%);
+	--color-primary-800: hsl(178 72% 17.5%);
+	--color-primary-900: hsl(178 72% 7.5%);
 }
 
 @layer base {
@@ -69,10 +110,20 @@
 
 	body {
 		@apply font-jost bg-surface;
+		/* November: the band portrait is a fixed page background, centred and
+		   scaled to 50% width, peeking through the transparent sections. */
+		background-color: hsl(0 0% 100%);
+		background-image: url('https://files.nvmbrmusic.com/files/37e003ac-05b5-4101-b28b-1139f576de5b.png');
+		background-attachment: fixed;
+		background-position: 50%;
+		background-repeat: no-repeat;
+		background-size: 50% auto;
 	}
 
-	#page-wrapper {
-		@apply relative flex flex-col w-full min-h-screen bg-canvas text-ink;
+	@media screen and (min-width: 65em) {
+		body {
+			background-position-y: 152px;
+		}
 	}
 
 	a {
@@ -202,14 +253,6 @@
 		}
 		to {
 			opacity: 1;
-		}
-	}
-
-	main {
-		@apply mt-16.5;
-
-		@variant md {
-			@apply mt-18;
 		}
 	}
 }
@@ -362,9 +405,9 @@
 }
 
 @utility container {
+	/* November container: `width: min(100% - 2rem, 82rem); margin-inline: auto;` */
+	width: min(100% - 2rem, 82rem);
 	margin-inline: auto;
-	padding-inline: 1rem;
-	max-width: 1330px;
 }
 
 @utility grid-auto-fit-* {

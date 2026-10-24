@@ -16,7 +16,7 @@ export default function PageRenderer({ content, pageId, locale }: PageRendererPr
 	if (!content.blocks.length) return null;
 
 	return (
-		<main>
+		<main className="font-bebas text-lg leading-normal text-neutral-800 min-[75em]:text-[1.3125rem]">
 			{content.blocks.map((block, index) => (
 				<BlockRenderer key={block.id} block={block} pageId={pageId} locale={locale} isPriority={index < 2} />
 			))}

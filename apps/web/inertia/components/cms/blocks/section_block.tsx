@@ -3,12 +3,17 @@ import { ReactNode } from 'react';
 import { resolveResponsive } from '~/components/cms/utils/responsive';
 import type { ResolvedBlock } from '#cms/types/page';
 
+/**
+ * November section vertical padding — the live site uses flat
+ * `padding-block-N` utilities (no responsive variants), so each step maps to
+ * a single class: sm 1.5rem, md 2.5rem, lg 3rem, xl 4rem.
+ */
 const paddingYMap = {
-	none: { default: 'py-0', md: 'md:py-0', lg: 'lg:py-0' },
-	sm: { default: 'py-8', md: 'md:py-10', lg: 'lg:py-12' },
-	md: { default: 'py-20', md: 'md:py-28', lg: 'lg:py-32' },
-	lg: { default: 'py-28', md: 'md:py-36', lg: 'lg:py-44' },
-	xl: { default: 'py-36', md: 'md:py-48', lg: 'lg:py-60' },
+	none: { default: 'py-0' },
+	sm: { default: 'py-6' },
+	md: { default: 'py-10' },
+	lg: { default: 'py-12' },
+	xl: { default: 'py-16' },
 };
 
 const paddingXMap = {

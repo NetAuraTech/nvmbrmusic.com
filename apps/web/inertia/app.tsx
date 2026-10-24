@@ -15,7 +15,7 @@ initSentry();
 let appName = '';
 
 createInertiaApp({
-	title: (title) => (title ? `${title} - ${appName}` : appName),
+	title: (title) => (title ? (title.includes(appName) ? title : `${title} - ${appName}`) : appName),
 	resolve: (name) => {
 		return resolvePageComponent<ResolvedComponent>(
 			`./pages/${name}.tsx`,
