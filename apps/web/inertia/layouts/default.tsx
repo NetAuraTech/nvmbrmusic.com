@@ -239,7 +239,7 @@ export default function Layout(props: LayoutProps) {
 					</button>
 				</header>
 				{children}
-				<footer className="relative mt-auto font-bebas text-lg leading-normal text-neutral-100 min-[75em]:text-[1.3125rem]">
+				<footer className="relative mt-auto bg-paper font-bebas text-lg leading-normal text-neutral-100 min-[75em]:text-[1.3125rem]">
 					<section id="contact" className="py-6">
 						<div className="container">
 							<div className="mt-10 grid-auto-fit-[230px] gap-6">

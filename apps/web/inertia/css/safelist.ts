@@ -121,6 +121,7 @@ const classes = [
 	'border-neutral-400',
 	'rounded-none',
 	'bg-neutral-900',
+	'bg-paper',
 	// Interactions
 	'cursor-pointer',
 	'no-underline',
