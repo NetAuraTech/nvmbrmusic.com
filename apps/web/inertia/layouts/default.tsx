@@ -14,9 +14,9 @@ const PORTRAIT_URL = `${R2_FILES}/37e003ac-05b5-4101-b28b-1139f576de5b.png`;
 const BAND_EMAIL = 'netfastcoremusic@gmail.com';
 
 const NAV_LINKS = [
+	{ label: 'Merchandising', href: '#merchandising' },
 	{ label: 'Show dates', href: '#show' },
 	{ label: 'Discography', href: '#discography' },
-	{ label: 'Merchandising', href: '#merchandising' },
 	{ label: 'Contact', href: '#contact' },
 ];
 
