@@ -19,4 +19,7 @@ export interface LegalIdentity {
 
 	/** Public contact telephone number, e.g. `'+33 3 12 34 56 78'`. */
 	phone?: string;
+
+	/** Public contact email address, e.g. `'contact@example.com'`. */
+	email?: string;
 }
