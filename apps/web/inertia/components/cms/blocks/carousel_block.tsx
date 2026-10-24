@@ -17,7 +17,8 @@ const aspectMap: Record<MediaAspect, Record<'default', string>> = {
 
 /**
  * Renders a slide carousel. Each child block (pre-rendered by `BlockRenderer`)
- * is one slide; only the active slide is visible. Arrows and dots navigate
+ * is one slide, laid out side by side in a track that slides horizontally
+ * (transform transition) to the active slide. Arrows and dots navigate
  * between slides. Renders nothing when there are no slides.
  *
  * Kept dependency-free: a single `useState` index, no external carousel lib.
@@ -44,18 +45,28 @@ export default function CarouselBlock({ block, children }: CarouselBlockProps) {
 	return (
 		<div className={['group relative w-full', className].filter(Boolean).join(' ')}>
 			<div className={`relative w-full overflow-hidden ${aspectClasses}`}>
-				{slides.map((slide, i) => (
-					<div
-						key={i}
-						role="group"
-						aria-roledescription="slide"
-						aria-label={`${i + 1} / ${count}`}
-						aria-hidden={i !== current}
-						className={i === current ? 'absolute inset-0' : 'hidden'}
-					>
-						{slide}
-					</div>
-				))}
+				{/*
+					The slides sit side by side in a track; the track slides
+					horizontally (transform transition) to bring the active
+					slide into view instead of switching slides instantly.
+				*/}
+				<div
+					className="flex h-full transition-transform duration-500 ease-in-out"
+					style={{ transform: `translateX(-${current * 100}%)` }}
+				>
+					{slides.map((slide, i) => (
+						<div
+							key={i}
+							role="group"
+							aria-roledescription="slide"
+							aria-label={`${i + 1} / ${count}`}
+							aria-hidden={i !== current}
+							className="h-full w-full shrink-0"
+						>
+							{slide}
+						</div>
+					))}
+				</div>
 			</div>
 
 			{showArrows && count > 1 && (

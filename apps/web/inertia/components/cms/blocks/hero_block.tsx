@@ -65,7 +65,7 @@ export default function HeroBlock({ block }: HeroBlockProps) {
 								width={icon.width ?? 45}
 								height={icon.height ?? 45}
 								loading="lazy"
-								className="h-[45px] w-auto transition-[transform,filter] duration-300 group-hover:scale-[1.2] group-hover:[filter:sepia(1)_saturate(10)_hue-rotate(135deg)_brightness(0.9)_contrast(1)]"
+								className="h-[45px] w-auto transition-[transform,scale,filter] duration-300 group-hover:scale-[1.2] group-hover:[filter:sepia(1)_saturate(10)_hue-rotate(135deg)_brightness(0.9)_contrast(1)]"
 							/>
 						</a>
 					))}

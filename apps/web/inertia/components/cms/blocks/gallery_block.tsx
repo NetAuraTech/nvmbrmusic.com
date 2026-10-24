@@ -194,7 +194,7 @@ export default function GalleryBlock({ block }: GalleryBlockProps) {
 						type="button"
 						aria-label="Previous image"
 						onClick={() => step(-1)}
-						className={`${lightboxControl} -mt-[14px] left-0 w-[50px]`}
+						className={`${lightboxControl} -mt-[14px] h-full left-0 w-[50px]`}
 					>
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 rotate-180">
 							<path d="m9 18 6-6-6-6" />
@@ -205,7 +205,7 @@ export default function GalleryBlock({ block }: GalleryBlockProps) {
 						type="button"
 						aria-label="Next image"
 						onClick={() => step(1)}
-						className={`${lightboxControl} -mt-[14px] right-0 w-[50px]`}
+						className={`${lightboxControl} -mt-[14px] h-full right-0 w-[50px]`}
 					>
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
 							<path d="m9 18 6-6-6-6" />
