@@ -16,6 +16,7 @@ const classes = [
 	'h-13',
 	'relative',
 	'absolute',
+	'block',
 	'bottom-0',
 	'right-0',
 	'left-0',
