@@ -39,7 +39,7 @@ export default function CarouselBlock({ block, children }: CarouselBlockProps) {
 	const next = () => goTo(current + 1);
 
 	const arrowButton =
-		'absolute top-1/2 z-10 -translate-y-1/2 rounded-full bg-overlay/80 p-2 text-ink shadow transition hover:bg-overlay';
+		'absolute top-1/2 z-10 flex h-[50px] w-[50px] -translate-y-1/2 items-center justify-center rounded-full bg-primary-400 text-neutral-100 transition-colors duration-300 hover:bg-accent-400 max-[1000px]:hidden';
 
 	return (
 		<div className={['group relative w-full', className].filter(Boolean).join(' ')}>
@@ -60,11 +60,11 @@ export default function CarouselBlock({ block, children }: CarouselBlockProps) {
 
 			{showArrows && count > 1 && (
 				<>
-					<button type="button" onClick={prev} aria-label="Previous slide" className={`${arrowButton} left-2`}>
-						<Icon name="ChevronLeft" size={20} />
+					<button type="button" onClick={prev} aria-label="Previous slide" className={`${arrowButton} left-[35px]`}>
+						<Icon name="ChevronLeft" size={24} />
 					</button>
-					<button type="button" onClick={next} aria-label="Next slide" className={`${arrowButton} right-2`}>
-						<Icon name="ChevronRight" size={20} />
+					<button type="button" onClick={next} aria-label="Next slide" className={`${arrowButton} right-[35px]`}>
+						<Icon name="ChevronRight" size={24} />
 					</button>
 				</>
 			)}

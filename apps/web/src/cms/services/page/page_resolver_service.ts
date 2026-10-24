@@ -3,13 +3,24 @@ import { classifyVideoUrl, isAllowedIframeUrl } from '#cms/services/page/embed_p
 import { FileRepository } from '#file/repositories/file_repository';
 import { classifyFileType } from '#file/services/file_type';
 import { ImageOptimizerService } from '#file/services/image_optimizer_service';
-import type { Block, PageContent, BlockType, ImageProps, VideoProps, IframeProps } from '#cms/types/page';
+import type {
+	Block,
+	PageContent,
+	BlockType,
+	ImageProps,
+	VideoProps,
+	IframeProps,
+	HeroProps,
+	GalleryProps,
+} from '#cms/types/page';
 import type {
 	ResolvedBlock,
 	ResolvedPageContent,
 	ResolvedImageProps,
 	ResolvedVideoProps,
 	ResolvedIframeProps,
+	ResolvedHeroProps,
+	ResolvedGalleryProps,
 } from '#cms/types/page';
 import type CmsFile from '#file/models/file';
 import type { FileRef, ResolvedFile } from '#types/file';
@@ -61,6 +72,21 @@ export class PageResolverService {
 			if (block.type === 'video') {
 				const props = block.props as VideoProps;
 				if (props.poster?.fileId) ids.add(props.poster.fileId);
+			}
+
+			if (block.type === 'hero') {
+				const props = block.props as HeroProps;
+				if (props.logo?.fileId) ids.add(props.logo.fileId);
+				for (const ref of props.socials) {
+					if (ref?.fileId) ids.add(ref.fileId);
+				}
+			}
+
+			if (block.type === 'gallery') {
+				const props = block.props as GalleryProps;
+				for (const ref of props.images) {
+					if (ref?.fileId) ids.add(ref.fileId);
+				}
 			}
 
 			if (block.children?.length) {
@@ -154,6 +180,23 @@ export class PageResolverService {
 					// Allowlist re-enforced at render time (see embed_policy).
 					url: props.url && isAllowedIframeUrl(props.url) ? props.url : null,
 				} satisfies ResolvedIframeProps;
+			}
+
+			case 'hero': {
+				const props = block.props as HeroProps;
+				const logo = props.logo ? await this.resolveFileRef(props.logo, locale, fileMap) : null;
+				const socials = (
+					await Promise.all(props.socials.map((ref) => this.resolveFileRef(ref, locale, fileMap)))
+				).filter((f): f is ResolvedFile => f !== null);
+				return { ...props, logo, socials } satisfies ResolvedHeroProps;
+			}
+
+			case 'gallery': {
+				const props = block.props as GalleryProps;
+				const images = (await Promise.all(props.images.map((ref) => this.resolveFileRef(ref, locale, fileMap)))).filter(
+					(f): f is ResolvedFile => f !== null,
+				);
+				return { ...props, images } satisfies ResolvedGalleryProps;
 			}
 
 			default:

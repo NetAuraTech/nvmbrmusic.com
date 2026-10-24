@@ -241,6 +241,29 @@ export const BLOCK_CATALOG: BlockDescriptor[] = [
 			className: '',
 		},
 	},
+	{
+		type: 'hero',
+		label: 'Hero',
+		icon: 'image',
+		description: 'Centered band logo with social media links',
+		isContainer: false,
+		defaultProps: {
+			logo: null,
+			socials: [],
+			className: '',
+		},
+	},
+	{
+		type: 'gallery',
+		label: 'Gallery',
+		icon: 'grid',
+		description: 'Full-bleed image gallery with lightbox',
+		isContainer: false,
+		defaultProps: {
+			images: [],
+			className: '',
+		},
+	},
 ];
 
 /** Returns the descriptor for a given block type, optionally with translated labels */

@@ -3,7 +3,9 @@ import CarouselBlock from '~/components/cms/blocks/carousel_block';
 import FieldBlock from '~/components/cms/blocks/field_block';
 import FlexBlock from '~/components/cms/blocks/flex_block';
 import FormBlock from '~/components/cms/blocks/form_block';
+import GalleryBlock from '~/components/cms/blocks/gallery_block';
 import GridBlock from '~/components/cms/blocks/grid_block';
+import HeroBlock from '~/components/cms/blocks/hero_block';
 import HtmlTextBlock from '~/components/cms/blocks/html_text_block';
 import IconBlock from '~/components/cms/blocks/icon_block';
 import IframeBlock from '~/components/cms/blocks/iframe_block';
@@ -97,6 +99,10 @@ export default function BlockRenderer({ block, pageId, locale, isPriority = fals
 			return <QuoteBlock block={block as ResolvedBlock<'quote'>} />;
 		case 'iframe':
 			return <IframeBlock block={block as ResolvedBlock<'iframe'>} />;
+		case 'hero':
+			return <HeroBlock block={block as ResolvedBlock<'hero'>} />;
+		case 'gallery':
+			return <GalleryBlock block={block as ResolvedBlock<'gallery'>} />;
 		default:
 			if (process.env.NODE_ENV === 'development') {
 				console.warn(`[BlockRenderer] Unknown block type: ${(block as any).type}`);
