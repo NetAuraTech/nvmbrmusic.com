@@ -1,5 +1,7 @@
 import { inject } from '@adonisjs/core';
 import { classifyVideoUrl, isAllowedIframeUrl } from '#cms/services/page/embed_policy';
+import { resolveLegalTokens } from '#cms/types/legal_variables';
+import seoConfig from '#config/seo';
 import { FileRepository } from '#file/repositories/file_repository';
 import { classifyFileType } from '#file/services/file_type';
 import { ImageOptimizerService } from '#file/services/image_optimizer_service';
@@ -12,6 +14,7 @@ import type {
 	IframeProps,
 	HeroProps,
 	GalleryProps,
+	HtmlTextProps,
 } from '#cms/types/page';
 import type {
 	ResolvedBlock,
@@ -34,7 +37,9 @@ export class PageResolverService {
 
 	/**
 	 * Resolves all `FileRef` values in a `PageContent` tree into `ResolvedFile`
-	 * objects, batching all file lookups into a single DB query.
+	 * objects, batching all file lookups into a single DB query, and resolves
+	 * the `{{legal.*}}` tokens of htmltext blocks against the configured
+	 * publisher identity.
 	 *
 	 * The original `content` is not mutated — a parallel `ResolvedPageContent`
 	 * structure is returned. This keeps the stored JSON clean and the resolved
@@ -199,9 +204,16 @@ export class PageResolverService {
 				return { ...props, images } satisfies ResolvedGalleryProps;
 			}
 
+			case 'htmltext': {
+				const props = block.props as HtmlTextProps;
+				// `{{legal.*}}` tokens are resolved at render time from the
+				// configured publisher identity (see legal_variables).
+				return { ...props, content: resolveLegalTokens(props.content, seoConfig.identity) } satisfies HtmlTextProps;
+			}
+
 			default:
 				// section, grid, flex, title, paragraph, button, separator, icon,
-				// form, field, htmltext, carousel, list, quote
+				// form, field, carousel, list, quote
 				// none of these have FileRef fields or render-time policies — return
 				// props unchanged
 				return block.props as ResolvedBlock['props'];

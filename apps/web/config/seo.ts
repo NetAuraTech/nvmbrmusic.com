@@ -21,8 +21,10 @@ const optional = (value: string): string | undefined => (value === '' ? undefine
  */
 const seoConfig = {
 	/**
-	 * Publisher identity for the public front structured data, resolved from
-	 * the `LEGAL_*` environment variables. Every field is optional — an
+	 * Publisher identity, resolved from the `LEGAL_*` environment variables.
+	 * Feeds the public front structured data and the `{{legal.*}}` content
+	 * variables resolved in htmltext blocks at render time (see
+	 * `#cms/types/legal_variables`). Every field is optional — an
 	 * unconfigured deployment shares an empty identity.
 	 */
 	identity: {
@@ -30,6 +32,7 @@ const seoConfig = {
 		siret: optional(env.get('LEGAL_SIRET', '')),
 		address: optional(env.get('LEGAL_ADDRESS', '')),
 		phone: optional(env.get('LEGAL_PHONE', '')),
+		email: optional(env.get('LEGAL_EMAIL', '')),
 	} satisfies LegalIdentity,
 };
 
