@@ -326,6 +326,10 @@ export default function Layout(props: LayoutProps) {
 								|{' '}
 								<a href="/legal-notices" rel="noopener noreferrer nofollow" className={FOOTER_LINK}>
 									Legal Notices
+								</a>{' '}
+								|{' '}
+								<a href="/privacy-policy" rel="noopener noreferrer nofollow" className={FOOTER_LINK}>
+									Privacy Policy
 								</a>
 							</p>
 						</div>
