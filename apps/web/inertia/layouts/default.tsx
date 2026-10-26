@@ -128,8 +128,6 @@ export default function Layout(props: LayoutProps) {
 		<>
 			<Head>
 				<link rel="canonical" href={`${app_url}${url}`} />
-				<link rel="preconnect" href="https://api.iconify.design" />
-				<link rel="dns-prefetch" href="https://api.iconify.design" />
 				<meta name="robots" content={robots} />
 				<meta name="language" content="fr" />
 				<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
