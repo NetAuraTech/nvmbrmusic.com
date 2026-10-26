@@ -37,9 +37,6 @@
     },
     "@ai-sdk/provider": "^4.0.28",
     "@ai-sdk/provider-utils": "^5.0.61",
-    "@scalar/json-magic": {
-      "undici": "7.29.1"
-    },
     "nodemailer": "^10.0.9"
   },
   "engines": {
