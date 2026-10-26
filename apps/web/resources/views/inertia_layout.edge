@@ -3,13 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script>
-      (function() {
-        const stored = localStorage.getItem("theme");
-        const isDark = stored === "dark" || stored === null && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.classList.toggle("dark", isDark);
-      })();
-    </script>
+    <!--
+      Theme bootstrap must run before first paint, but the production CSP
+      (`script-src 'self'`) blocks inline scripts — hence a same-origin static
+      file instead. See `public/scripts/theme-init.js`.
+    -->
+    <script src="/scripts/theme-init.js"></script>
     @viteReactRefresh()
     @vite(['inertia/app.tsx'])
     @inertiaHead()

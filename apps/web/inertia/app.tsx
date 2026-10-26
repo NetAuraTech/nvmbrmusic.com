@@ -1,4 +1,5 @@
 import './css/app.css';
+import '~/lib/icons';
 import { resolvePageComponent } from '@adonisjs/inertia/helpers';
 import { TuyauProvider } from '@adonisjs/inertia/react';
 import { Data } from '@generated/data';
