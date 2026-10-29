@@ -57,7 +57,7 @@
     "tailwind-variants": "^3.3.1"
   },
   "devDependencies": {
-    "@storybook/react": "^10.6.1",
+    "@storybook/react": "^10.6.4",
     "@storybook/react-vite": "^10.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
