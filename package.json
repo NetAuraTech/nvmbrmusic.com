@@ -1,8 +1,8 @@
 {
   "name": "adonisjs-foundry",
-  "version": "2.3.0",
+  "version": "1.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -26,8 +26,8 @@
     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "oxfmt": "^0.70.0",
-    "oxlint": "^1.87.0",
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.89.0",
     "pino-pretty": "^13.2.0",
     "typescript": "~5.9.3"
   },
@@ -35,8 +35,6 @@
     "@adonisjs/ally": {
       "@adonisjs/inertia": "^5.0.0"
     },
-    "@ai-sdk/provider": "^4.0.28",
-    "@ai-sdk/provider-utils": "^5.0.61",
     "nodemailer": "^10.0.9"
   },
   "engines": {

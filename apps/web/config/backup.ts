@@ -25,15 +25,14 @@ const backupConfig = {
 		connection: env.get('DB_CONNECTION', 'pg'),
 
 		/**
-		 * Schemas to include in dumps (comma-separated). Empty (default) =
-		 * every schema of the database (standard pg_dump behavior).
-		 *
-		 * Set to `public` on platform-hosted databases such as Supabase,
-		 * which own additional schemas (`auth`, `storage`, `realtime`, ...)
-		 * that must not be dumped — their `CREATE SCHEMA` statements would
-		 * collide with the schemas already present on any restore target.
+		 * Schemas to include in the dump (one `pg_dump --schema` flag per value).
+		 * Empty (default) dumps every schema of the database.
 		 */
-		schemas: (env.get('BACKUP_PG_SCHEMAS', '') as string).split(',').filter(Boolean),
+		schemas: env
+			.get('BACKUP_PG_SCHEMAS', '')
+			.split(',')
+			.map((schema) => schema.trim())
+			.filter(Boolean),
 	},
 
 	/**
