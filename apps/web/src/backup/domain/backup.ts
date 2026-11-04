@@ -61,6 +61,17 @@ export class BackupMetadata extends ValueObject<{
 	}
 
 	/**
+	 * Extract the strategy type from a backup filename, or `null` when the
+	 * filename does not follow the backup filename grammar.
+	 *
+	 * @param filename - The artifact filename (relative to the storage prefix).
+	 */
+	static parseType(filename: string): BackupType | null {
+		const parsed = BackupMetadata.parseFilename(filename);
+		return parsed ? parsed.type : null;
+	}
+
+	/**
 	 * Parse the strategy type and the embedded timestamp out of a backup
 	 * filename. Returns `null` when the filename does not follow the grammar.
 	 *
