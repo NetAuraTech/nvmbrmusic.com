@@ -47,7 +47,7 @@ AdonisJS Foundry is built on AdonisJS v7 and follows a domain-driven architectur
 - **Pagination** — Generic pagination service with frontend pagination component
 - **Dark/Light Theme** — Client-side theme toggle with server-side preference persistence
 - **Frontend Guards** — Authenticated, role-based, and permission-based route guards
-- **Docker Ready** — Dockerfile and docker-compose for development and production environments
+- **Docker Ready** — Multi-stage Dockerfile for production and docker-compose for development infrastructure
 - **Database Backup** — Full & differential backups with multi-storage (local, S3, R2), encryption, retention policy, and health checks
 
 ## Tech Stack
@@ -329,7 +329,7 @@ http://localhost:3333/oauth/facebook/callback
 
 ### Docker
 
-The project includes Docker configurations for both development and production.
+The project ships a multi-stage `Dockerfile` for production and a `docker-compose.yml` for development infrastructure.
 
 **Development** — Spin up PostgreSQL, Redis, Typesense, and MailHog:
 
@@ -337,13 +337,13 @@ The project includes Docker configurations for both development and production.
 docker compose up -d
 ```
 
-**Production** — Multi-stage build with Nginx reverse proxy, 3 app replicas, and a queue worker:
+**Production** — Build the multi-stage image from the `Dockerfile` and run a queue worker alongside the app:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+docker build -t foundry .
 ```
 
-The `worker` service runs `node ace queue:work -q default,auth,maintenance,webhook`
+The worker runs `node ace queue:work -q default,auth,maintenance,webhook`
 (see `config/queue.ts`) and consumes the job queues — currently the
 password-reset mail (sent asynchronously after the forgot-password response),
 the scheduled maintenance tasks (Log Entry pruning and backup retention
@@ -734,7 +734,6 @@ adonisjs-foundry/
 ├── docs/                   # Agent docs, ADRs
 ├── .github/workflows/      # CI: tests, codegen drift check, release
 ├── docker-compose.yml      # Dev infrastructure (PostgreSQL, Redis, MailHog, Typesense)
-├── docker-compose.prod.yml # Production stack (Nginx + app replicas)
 └── Dockerfile              # Multi-stage production image
 ```
 
